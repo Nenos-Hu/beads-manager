@@ -24,7 +24,7 @@ const parseJson = (raw) => {
 };
 
 const listBeads = async (relativePath) => {
-  const out = await bd(['list', '--json'], projectPath(relativePath));
+  const out = await bd(['list', '--all', '--limit', '0', '--json'], projectPath(relativePath));
   return parseJson(out);
 };
 

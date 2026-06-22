@@ -18,7 +18,7 @@ const wrapBdError = (err) => {
   if (msg.includes('.beads')) {
     throw Boom.badRequest('Project not initialized with bd. Run `bd init` in the project folder.');
   }
-  throw Boom.badImplementation(msg);
+  throw Boom.serverUnavailable(msg);
 };
 
 module.exports = [

@@ -22,10 +22,10 @@ const DEFAULTS = { title: '', description: '', priority: 2, issueType: 'task' };
 
 export default function BeadForm({ open, onClose, onSubmit, initial }) {
   const [form, setForm] = useState(initial ? {
-    title: initial.Title || '',
-    description: initial.Description || '',
-    priority: initial.Priority ?? 2,
-    issueType: initial.IssueType || 'task',
+    title: initial.title || '',
+    description: initial.description || '',
+    priority: initial.priority ?? 2,
+    issueType: initial.issue_type || 'task',
   } : DEFAULTS);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

@@ -26,11 +26,11 @@ export default function BeadDetail({ bead, open, onClose, onEdit, onDelete }) {
   if (!bead) return null;
 
   const handleEdit = async (form) => {
-    await onEdit(bead.ID, form);
+    await onEdit(bead.id, form);
   };
 
   const handleDelete = async () => {
-    await onDelete(bead.ID, reason || 'Closed via Beads Manager');
+    await onDelete(bead.id, reason || 'Closed via Beads Manager');
     setDeleteOpen(false);
     onClose();
   };
@@ -40,55 +40,55 @@ export default function BeadDetail({ bead, open, onClose, onEdit, onDelete }) {
       <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 480 } } }}>
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="caption" color="text.secondary">{bead.ID}</Typography>
+            <Typography variant="caption" color="text.secondary" fontFamily="monospace">{bead.id}</Typography>
             <IconButton size="small" onClick={onClose}><CloseIcon /></IconButton>
           </Box>
 
-          <Typography variant="h6" sx={{ mb: 1 }}>{bead.Title}</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>{bead.title}</Typography>
 
           <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-            <StatusChip status={bead.Status} />
-            <PriorityBadge priority={bead.Priority} />
-            {bead.IssueType && (
+            <StatusChip status={bead.status} />
+            <PriorityBadge priority={bead.priority} />
+            {bead.issue_type && (
               <Typography variant="caption" sx={{ border: '1px solid', borderColor: 'divider', px: 1, py: 0.3, borderRadius: 1, alignSelf: 'center' }}>
-                {bead.IssueType}
+                {bead.issue_type}
               </Typography>
             )}
           </Stack>
 
           <Divider sx={{ mb: 2 }} />
 
-          {bead.Description && (
+          {bead.description && (
             <>
               <Typography variant="subtitle2" gutterBottom>Description</Typography>
-              <Typography variant="body2" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>{bead.Description}</Typography>
+              <Typography variant="body2" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>{bead.description}</Typography>
             </>
           )}
 
-          {bead.AcceptanceCriteria && (
+          {bead.acceptance_criteria && (
             <>
               <Typography variant="subtitle2" gutterBottom>Acceptance Criteria</Typography>
-              <Typography variant="body2" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>{bead.AcceptanceCriteria}</Typography>
+              <Typography variant="body2" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>{bead.acceptance_criteria}</Typography>
             </>
           )}
 
-          {bead.Notes && (
+          {bead.notes && (
             <>
               <Typography variant="subtitle2" gutterBottom>Notes</Typography>
-              <Typography variant="body2" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>{bead.Notes}</Typography>
+              <Typography variant="body2" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>{bead.notes}</Typography>
             </>
           )}
 
           <Box sx={{ mt: 'auto' }}>
             <Divider sx={{ mb: 2 }} />
-            {bead.CreatedAt && (
+            {bead.created_at && (
               <Typography variant="caption" color="text.secondary" display="block">
-                Created: {new Date(bead.CreatedAt).toLocaleString()}
+                Created: {new Date(bead.created_at).toLocaleString()}
               </Typography>
             )}
-            {bead.UpdatedAt && (
+            {bead.updated_at && (
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
-                Updated: {new Date(bead.UpdatedAt).toLocaleString()}
+                Updated: {new Date(bead.updated_at).toLocaleString()}
               </Typography>
             )}
             <Stack direction="row" spacing={1}>
@@ -96,7 +96,7 @@ export default function BeadDetail({ bead, open, onClose, onEdit, onDelete }) {
                 Edit
               </Button>
               <Button startIcon={<DeleteIcon />} color="error" variant="outlined" onClick={() => setDeleteOpen(true)}
-                disabled={bead.Status === 'closed'}>
+                disabled={bead.status === 'closed'}>
                 Close
               </Button>
             </Stack>
@@ -117,7 +117,7 @@ export default function BeadDetail({ bead, open, onClose, onEdit, onDelete }) {
         <DialogTitle>Close bead</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            This will mark <strong>{bead.Title}</strong> as closed.
+            This will mark <strong>{bead.title}</strong> as closed.
           </Typography>
           <TextField
             label="Reason (optional)"

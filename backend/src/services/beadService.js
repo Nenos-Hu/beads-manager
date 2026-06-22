@@ -30,7 +30,8 @@ const listBeads = async (relativePath) => {
 
 const getBead = async (relativePath, beadId) => {
   const out = await bd(['show', beadId, '--json'], projectPath(relativePath));
-  return parseJson(out);
+  const parsed = parseJson(out);
+  return Array.isArray(parsed) ? parsed[0] : parsed;
 };
 
 const createBead = async (relativePath, { title, description, priority, issueType }) => {

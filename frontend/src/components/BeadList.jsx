@@ -20,16 +20,16 @@ const STATUSES = ['all', 'open', 'in_progress', 'blocked', 'deferred', 'closed',
 const TYPES    = ['all', 'task', 'feature', 'bug', 'chore', 'epic', 'spike', 'story', 'decision'];
 
 export default function BeadList({ beads, onSelect }) {
-  const [search, setSearch]     = useState('');
-  const [status, setStatus]     = useState('all');
-  const [type, setType]         = useState('all');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('all');
+  const [type, setType]     = useState('all');
 
   const filtered = beads.filter((b) => {
-    const matchSearch = !search || [b.Title, b.Description, b.ID].some(
+    const matchSearch = !search || [b.title, b.description, b.id].some(
       (v) => v && String(v).toLowerCase().includes(search.toLowerCase()),
     );
-    const matchStatus = status === 'all' || b.Status === status;
-    const matchType   = type === 'all'   || b.IssueType === type;
+    const matchStatus = status === 'all' || b.status === status;
+    const matchType   = type === 'all'   || b.issue_type === type;
     return matchSearch && matchStatus && matchType;
   });
 
@@ -68,30 +68,25 @@ export default function BeadList({ beads, onSelect }) {
             </TableHead>
             <TableBody>
               {filtered.map((b) => (
-                <TableRow
-                  key={b.ID}
-                  hover
-                  onClick={() => onSelect(b)}
-                  sx={{ cursor: 'pointer' }}
-                >
+                <TableRow key={b.id} hover onClick={() => onSelect(b)} sx={{ cursor: 'pointer' }}>
                   <TableCell>
                     <Typography variant="caption" color="text.secondary" fontFamily="monospace">
-                      {b.ID}
+                      {b.id}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" fontWeight={500}>{b.Title}</Typography>
-                    {b.Description && (
+                    <Typography variant="body2" fontWeight={500}>{b.title}</Typography>
+                    {b.description && (
                       <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', maxWidth: 300 }}>
-                        {b.Description}
+                        {b.description}
                       </Typography>
                     )}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="caption">{b.IssueType}</Typography>
+                    <Typography variant="caption">{b.issue_type}</Typography>
                   </TableCell>
-                  <TableCell><StatusChip status={b.Status} /></TableCell>
-                  <TableCell><PriorityBadge priority={b.Priority} /></TableCell>
+                  <TableCell><StatusChip status={b.status} /></TableCell>
+                  <TableCell><PriorityBadge priority={b.priority} /></TableCell>
                   <TableCell align="right">
                     <IconButton size="small" onClick={(e) => { e.stopPropagation(); onSelect(b); }}>
                       <OpenInNewIcon fontSize="small" />

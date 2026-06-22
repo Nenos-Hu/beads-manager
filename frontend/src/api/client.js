@@ -33,6 +33,7 @@ export const api = {
 
   // Workspace browser
   browseWorkspace: (path = '') => request('GET', `/workspace/browse?path=${encodeURIComponent(path)}`),
+  discoverProjects: (path = '') => request('GET', `/workspace/discover?path=${encodeURIComponent(path)}`),
 
   // Init
   initProject: (projectId) => request('POST', `/projects/${projectId}/init`),

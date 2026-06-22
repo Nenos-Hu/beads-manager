@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ${WORKSPACE_PATH}:/workspace
+      - beads-data:/data
+    environment:
+      NODE_ENV: production
+      WORKSPACE_PATH: /workspace
+      DATA_PATH: /data
+      PORT: 3001
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  beads-data:

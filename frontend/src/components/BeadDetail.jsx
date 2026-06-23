@@ -18,6 +18,7 @@ import StatusChip from './StatusChip';
 import PriorityBadge from './PriorityBadge';
 import BeadForm from './BeadForm';
 import BeadComments from './BeadComments';
+import CopyIconButton from './CopyIconButton';
 
 export default function BeadDetail({ bead, open, onClose, onEdit, onDelete, projectId }) {
   const [editOpen, setEditOpen] = useState(false);
@@ -40,8 +41,11 @@ export default function BeadDetail({ bead, open, onClose, onEdit, onDelete, proj
     <>
       <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 480 } } }}>
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="caption" color="text.secondary" fontFamily="monospace">{bead.id}</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography variant="caption" color="text.secondary" fontFamily="monospace">{bead.id}</Typography>
+              <CopyIconButton text={bead.id} size="small" />
+            </Box>
             <IconButton size="small" onClick={onClose}><CloseIcon /></IconButton>
           </Box>
 

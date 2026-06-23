@@ -20,6 +20,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StatusChip from './StatusChip';
 import PriorityBadge from './PriorityBadge';
+import CopyIconButton from './CopyIconButton';
 
 const ALL_STATUSES  = ['open', 'in_progress', 'blocked', 'deferred', 'closed', 'pinned'];
 const EDIT_STATUSES = ALL_STATUSES;
@@ -152,9 +153,12 @@ export default function BeadList({ beads, onSelect, onUpdate }) {
               {filtered.map((b) => (
                 <TableRow key={b.id} hover onClick={() => onSelect(b)} sx={{ cursor: 'pointer' }}>
                   <TableCell>
-                    <Typography variant="caption" color="text.secondary" fontFamily="monospace">
-                      {b.id}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary" fontFamily="monospace">
+                        {b.id}
+                      </Typography>
+                      <CopyIconButton text={b.id} size="small" />
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight={500}>{b.title}</Typography>

@@ -64,6 +64,13 @@ const initBeads = async (relativePath) => {
   return { success: true };
 };
 
+const getStats = async (relativePath) => {
+  const all = await listBeads(relativePath);
+  const byStatus = {};
+  all.forEach((b) => { byStatus[b.status] = (byStatus[b.status] || 0) + 1; });
+  return { byStatus, total: all.length };
+};
+
 const listComments = async (relativePath, beadId) => {
   const out = await bd(['comments', beadId, '--json'], projectPath(relativePath));
   return parseJson(out);
@@ -74,4 +81,4 @@ const addComment = async (relativePath, beadId, text) => {
   return parseJson(out);
 };
 
-module.exports = { listBeads, getBead, createBead, updateBead, closeBead, initBeads, listComments, addComment };
+module.exports = { listBeads, getBead, createBead, updateBead, closeBead, initBeads, getStats, listComments, addComment };

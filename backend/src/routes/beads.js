@@ -24,6 +24,19 @@ const wrapBdError = (err) => {
 module.exports = [
   {
     method: 'GET',
+    path: '/api/projects/{id}/stats',
+    handler: async (request) => {
+      const project = getProject(request.params.id);
+      try {
+        return await beads.getStats(project.relativePath);
+      } catch {
+        return { byStatus: {}, total: 0 };
+      }
+    },
+  },
+
+  {
+    method: 'GET',
     path: '/api/projects/{id}/beads',
     handler: async (request) => {
       const project = getProject(request.params.id);

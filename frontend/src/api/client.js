@@ -24,6 +24,7 @@ export const api = {
   deleteProject: (id) => request('DELETE', `/projects/${id}`),
 
   // Beads
+  getProjectStats: (projectId) => request('GET', `/projects/${projectId}/stats`),
   getBeads: (projectId) => request('GET', `/projects/${projectId}/beads`),
   getBead: (projectId, beadId) => request('GET', `/projects/${projectId}/beads/${beadId}`),
   createBead: (projectId, payload) => request('POST', `/projects/${projectId}/beads`, payload),

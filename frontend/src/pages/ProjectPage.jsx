@@ -87,6 +87,13 @@ export default function ProjectPage() {
     loadProject().then((p) => loadBeads(p));
   }, [id]);
 
+  useEffect(() => {
+    const es = new EventSource(`/api/projects/${id}/events`);
+    es.addEventListener('update', () => loadBeads());
+    es.onerror = () => {};
+    return () => es.close();
+  }, [id]);
+
   const handleCreate = async (form) => {
     await api.createBead(id, form);
     await loadBeads();

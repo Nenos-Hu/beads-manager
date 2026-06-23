@@ -4,6 +4,7 @@ const Hapi = require('@hapi/hapi');
 const projectRoutes = require('./routes/projects');
 const beadRoutes = require('./routes/beads');
 const workspaceRoutes = require('./routes/workspace');
+const sseRoutes = require('./routes/sse');
 
 const init = async () => {
   const server = Hapi.server({
@@ -23,6 +24,7 @@ const init = async () => {
   server.route(workspaceRoutes);
   server.route(projectRoutes);
   server.route(beadRoutes);
+  server.route(sseRoutes);
 
   await server.start();
   console.log(`Server running on ${server.info.uri}`);

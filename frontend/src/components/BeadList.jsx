@@ -22,11 +22,11 @@ import StatusChip from './StatusChip';
 import PriorityBadge from './PriorityBadge';
 import CopyIconButton from './CopyIconButton';
 
-const ALL_STATUSES  = ['open', 'in_progress', 'blocked', 'deferred', 'closed', 'pinned'];
+export const ALL_STATUSES     = ['open', 'in_progress', 'blocked', 'deferred', 'closed', 'pinned'];
+export const DEFAULT_STATUSES = ['open', 'in_progress', 'blocked', 'pinned'];
 const EDIT_STATUSES = ALL_STATUSES;
-const DEFAULT_STATUSES = ['open', 'in_progress', 'blocked', 'pinned'];
-const TYPES       = ['all', 'task', 'feature', 'bug', 'chore', 'epic', 'spike', 'story', 'decision'];
-const PRIORITIES  = [0, 1, 2, 3, 4];
+const TYPES         = ['all', 'task', 'feature', 'bug', 'chore', 'epic', 'spike', 'story', 'decision'];
+const PRIORITIES    = [0, 1, 2, 3, 4];
 
 function InlineStatusSelect({ beadId, value, onUpdate, updating }) {
   return (
@@ -70,11 +70,14 @@ function InlinePrioritySelect({ beadId, value, onUpdate, updating }) {
   );
 }
 
-export default function BeadList({ beads, onSelect, onUpdate }) {
-  const [search, setSearch]           = useState('');
-  const [selectedStatuses, setSelectedStatuses] = useState(DEFAULT_STATUSES);
-  const [type, setType]               = useState('all');
-  const [updating, setUpdating] = useState({}); // beadId → true while saving
+export default function BeadList({
+  beads, onSelect, onUpdate,
+  selectedStatuses, onStatusesChange,
+  selectedPriorities, onPrioritiesChange,
+}) {
+  const [search, setSearch] = useState('');
+  const [type, setType]     = useState('all');
+  const [updating, setUpdating] = useState({});
 
   const handleUpdate = async (beadId, changes) => {
     setUpdating((u) => ({ ...u, [beadId]: true }));
@@ -86,12 +89,13 @@ export default function BeadList({ beads, onSelect, onUpdate }) {
   };
 
   const filtered = beads.filter((b) => {
-    const matchSearch = !search || [b.title, b.description, b.id].some(
+    const matchSearch   = !search || [b.title, b.description, b.id].some(
       (v) => v && String(v).toLowerCase().includes(search.toLowerCase()),
     );
-    const matchStatus = selectedStatuses.length === 0 || selectedStatuses.includes(b.status);
-    const matchType   = type === 'all'   || b.issue_type === type;
-    return matchSearch && matchStatus && matchType;
+    const matchStatus   = selectedStatuses.length === 0 || selectedStatuses.includes(b.status);
+    const matchPriority = selectedPriorities.length === 0 || selectedPriorities.includes(b.priority);
+    const matchType     = type === 'all' || b.issue_type === type;
+    return matchSearch && matchStatus && matchPriority && matchType;
   });
 
   return (
@@ -109,7 +113,7 @@ export default function BeadList({ beads, onSelect, onUpdate }) {
           <Select
             multiple
             value={selectedStatuses}
-            onChange={(e) => setSelectedStatuses(e.target.value)}
+            onChange={(e) => onStatusesChange(e.target.value)}
             label="Status"
             renderValue={(selected) =>
               selected.length === 0 ? (

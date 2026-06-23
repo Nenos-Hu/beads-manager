@@ -20,7 +20,7 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { buildTheme } from '../themes';
 import { api } from '../api/client';
-import BeadList from '../components/BeadList';
+import BeadList, { DEFAULT_STATUSES } from '../components/BeadList';
 import BeadForm from '../components/BeadForm';
 import BeadDetail from '../components/BeadDetail';
 import BeadDashboard from '../components/BeadDashboard';
@@ -39,7 +39,22 @@ export default function ProjectPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedBead, setSelectedBead] = useState(null);
 
+  const [selectedStatuses, setSelectedStatuses]     = useState(DEFAULT_STATUSES);
+  const [selectedPriorities, setSelectedPriorities] = useState([]);
+
   const [paletteAnchor, setPaletteAnchor] = useState(null);
+
+  const handleStatusCardClick = (status) => {
+    setSelectedStatuses((prev) =>
+      prev.length === 1 && prev[0] === status ? DEFAULT_STATUSES : [status]
+    );
+  };
+
+  const handlePriorityCardClick = (priority) => {
+    setSelectedPriorities((prev) =>
+      prev.length === 1 && prev[0] === priority ? [] : [priority]
+    );
+  };
 
   const loadProject = async () => {
     const projects = await api.getProjects();
@@ -184,11 +199,21 @@ export default function ProjectPage() {
 
         {!loading && !error && !notInit && (
           <>
-            <BeadDashboard beads={beads} />
+            <BeadDashboard
+              beads={beads}
+              selectedStatuses={selectedStatuses}
+              onStatusClick={handleStatusCardClick}
+              selectedPriorities={selectedPriorities}
+              onPriorityClick={handlePriorityCardClick}
+            />
             <BeadList
               beads={beads}
               onSelect={(b) => setSelectedBead(b)}
               onUpdate={handleInlineUpdate}
+              selectedStatuses={selectedStatuses}
+              onStatusesChange={setSelectedStatuses}
+              selectedPriorities={selectedPriorities}
+              onPrioritiesChange={setSelectedPriorities}
             />
           </>
         )}

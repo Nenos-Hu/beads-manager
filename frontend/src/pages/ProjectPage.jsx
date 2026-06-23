@@ -23,6 +23,7 @@ import { api } from '../api/client';
 import BeadList from '../components/BeadList';
 import BeadForm from '../components/BeadForm';
 import BeadDetail from '../components/BeadDetail';
+import BeadDashboard from '../components/BeadDashboard';
 import ColorSchemePicker from '../components/ColorSchemePicker';
 
 export default function ProjectPage() {
@@ -182,11 +183,14 @@ export default function ProjectPage() {
         )}
 
         {!loading && !error && !notInit && (
-          <BeadList
-            beads={beads}
-            onSelect={(b) => setSelectedBead(b)}
-            onUpdate={handleInlineUpdate}
-          />
+          <>
+            <BeadDashboard beads={beads} />
+            <BeadList
+              beads={beads}
+              onSelect={(b) => setSelectedBead(b)}
+              onUpdate={handleInlineUpdate}
+            />
+          </>
         )}
 
         <Popover

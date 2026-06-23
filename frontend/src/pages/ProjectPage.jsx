@@ -87,6 +87,15 @@ export default function ProjectPage() {
     await loadBeads();
   };
 
+  const handleInlineUpdate = async (beadId, changes) => {
+    setBeads((prev) => prev.map((b) => b.id === beadId ? { ...b, ...changes } : b));
+    try {
+      await api.updateBead(id, beadId, changes);
+    } catch {
+      await loadBeads();
+    }
+  };
+
   const handleInitBeads = async () => {
     setLoading(true);
     try {
@@ -176,6 +185,7 @@ export default function ProjectPage() {
           <BeadList
             beads={beads}
             onSelect={(b) => setSelectedBead(b)}
+            onUpdate={handleInlineUpdate}
           />
         )}
 

@@ -20,12 +20,13 @@ import CircularProgress from '@mui/material/CircularProgress';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StatusChip from './StatusChip';
 import PriorityBadge from './PriorityBadge';
+import TypeChip from './TypeChip';
 import CopyIconButton from './CopyIconButton';
 
 export const ALL_STATUSES     = ['open', 'in_progress', 'blocked', 'deferred', 'closed', 'pinned'];
 export const DEFAULT_STATUSES = ['open', 'in_progress', 'blocked', 'pinned'];
 const EDIT_STATUSES = ALL_STATUSES;
-const TYPES         = ['all', 'task', 'feature', 'bug', 'chore', 'epic', 'spike', 'story', 'decision'];
+const ALL_TYPES     = ['task', 'feature', 'bug', 'chore', 'epic', 'spike', 'story', 'decision'];
 const PRIORITIES    = [0, 1, 2, 3, 4];
 
 function InlineStatusSelect({ beadId, value, onUpdate, updating }) {
@@ -75,9 +76,9 @@ export default function BeadList({
   selectedStatuses, onStatusesChange,
   selectedPriorities, onPrioritiesChange,
 }) {
-  const [search, setSearch] = useState('');
-  const [type, setType]     = useState('all');
-  const [updating, setUpdating] = useState({});
+  const [search, setSearch]           = useState('');
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [updating, setUpdating]       = useState({});
 
   const handleUpdate = async (beadId, changes) => {
     setUpdating((u) => ({ ...u, [beadId]: true }));
@@ -94,7 +95,7 @@ export default function BeadList({
     );
     const matchStatus   = selectedStatuses.length === 0 || selectedStatuses.includes(b.status);
     const matchPriority = selectedPriorities.length === 0 || selectedPriorities.includes(b.priority);
-    const matchType     = type === 'all' || b.issue_type === type;
+    const matchType     = selectedTypes.length === 0 || selectedTypes.includes(b.issue_type);
     return matchSearch && matchStatus && matchPriority && matchType;
   });
 
@@ -133,9 +134,31 @@ export default function BeadList({
             ))}
           </Select>
         </FormControl>
-        <TextField select size="small" label="Type" value={type} onChange={(e) => setType(e.target.value)} sx={{ minWidth: 120 }}>
-          {TYPES.map((t) => <MenuItem key={t} value={t}>{t === 'all' ? 'All types' : t}</MenuItem>)}
-        </TextField>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Type</InputLabel>
+          <Select
+            multiple
+            value={selectedTypes}
+            onChange={(e) => setSelectedTypes(e.target.value)}
+            label="Type"
+            renderValue={(selected) =>
+              selected.length === 0 ? (
+                <Typography variant="caption" color="text.secondary">All</Typography>
+              ) : (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((t) => <TypeChip key={t} type={t} size="small" />)}
+                </Box>
+              )
+            }
+          >
+            {ALL_TYPES.map((t) => (
+              <MenuItem key={t} value={t} dense>
+                <Checkbox checked={selectedTypes.includes(t)} size="small" sx={{ py: 0 }} />
+                <TypeChip type={t} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Stack>
 
       {filtered.length === 0 ? (
@@ -173,7 +196,7 @@ export default function BeadList({
                     )}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="caption">{b.issue_type}</Typography>
+                    <TypeChip type={b.issue_type} />
                   </TableCell>
                   <TableCell>
                     <InlineStatusSelect

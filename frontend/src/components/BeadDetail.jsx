@@ -16,6 +16,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import StatusChip from './StatusChip';
 import PriorityBadge from './PriorityBadge';
+import TypeChip from './TypeChip';
 import BeadForm from './BeadForm';
 import BeadComments from './BeadComments';
 import CopyIconButton from './CopyIconButton';
@@ -54,11 +55,7 @@ export default function BeadDetail({ bead, open, onClose, onEdit, onDelete, proj
           <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
             <StatusChip status={bead.status} />
             <PriorityBadge priority={bead.priority} />
-            {bead.issue_type && (
-              <Typography variant="caption" sx={{ border: '1px solid', borderColor: 'divider', px: 1, py: 0.3, borderRadius: 1, alignSelf: 'center' }}>
-                {bead.issue_type}
-              </Typography>
-            )}
+            {bead.issue_type && <TypeChip type={bead.issue_type} />}
           </Stack>
 
           <Divider sx={{ mb: 2 }} />

@@ -64,4 +64,14 @@ const initBeads = async (relativePath) => {
   return { success: true };
 };
 
-module.exports = { listBeads, getBead, createBead, updateBead, closeBead, initBeads };
+const listComments = async (relativePath, beadId) => {
+  const out = await bd(['comments', beadId, '--json'], projectPath(relativePath));
+  return parseJson(out);
+};
+
+const addComment = async (relativePath, beadId, text) => {
+  const out = await bd(['comment', beadId, text, '--json'], projectPath(relativePath));
+  return parseJson(out);
+};
+
+module.exports = { listBeads, getBead, createBead, updateBead, closeBead, initBeads, listComments, addComment };

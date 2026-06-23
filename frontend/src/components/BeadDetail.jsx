@@ -17,8 +17,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import StatusChip from './StatusChip';
 import PriorityBadge from './PriorityBadge';
 import BeadForm from './BeadForm';
+import BeadComments from './BeadComments';
 
-export default function BeadDetail({ bead, open, onClose, onEdit, onDelete }) {
+export default function BeadDetail({ bead, open, onClose, onEdit, onDelete, projectId }) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reason, setReason] = useState('');
@@ -78,6 +79,9 @@ export default function BeadDetail({ bead, open, onClose, onEdit, onDelete }) {
               <Typography variant="body2" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>{bead.notes}</Typography>
             </>
           )}
+
+          <Divider sx={{ mb: 2 }} />
+          <BeadComments projectId={projectId} beadId={bead.id} />
 
           <Box sx={{ mt: 'auto' }}>
             <Divider sx={{ mb: 2 }} />

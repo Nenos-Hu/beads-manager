@@ -31,6 +31,10 @@ export const api = {
   closeBead: (projectId, beadId, reason) =>
     request('DELETE', `/projects/${projectId}/beads/${beadId}`, { reason }),
 
+  // Comments
+  getComments: (projectId, beadId) => request('GET', `/projects/${projectId}/beads/${beadId}/comments`),
+  addComment: (projectId, beadId, text) => request('POST', `/projects/${projectId}/beads/${beadId}/comments`, { text }),
+
   // Workspace browser
   browseWorkspace: (path = '') => request('GET', `/workspace/browse?path=${encodeURIComponent(path)}`),
   discoverProjects: (path = '') => request('GET', `/workspace/discover?path=${encodeURIComponent(path)}`),

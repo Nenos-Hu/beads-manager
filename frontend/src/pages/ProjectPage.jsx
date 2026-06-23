@@ -212,6 +212,7 @@ export default function ProjectPage() {
           onClose={() => setSelectedBead(null)}
           onEdit={handleEdit}
           onDelete={handleClose}
+          projectId={id}
         />
       </Container>
     </ThemeProvider>

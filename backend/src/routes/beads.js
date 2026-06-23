@@ -91,6 +91,35 @@ module.exports = [
   },
 
   {
+    method: 'GET',
+    path: '/api/projects/{id}/beads/{beadId}/comments',
+    handler: async (request) => {
+      const project = getProject(request.params.id);
+      try {
+        return await beads.listComments(project.relativePath, request.params.beadId);
+      } catch (err) {
+        return wrapBdError(err);
+      }
+    },
+  },
+
+  {
+    method: 'POST',
+    path: '/api/projects/{id}/beads/{beadId}/comments',
+    handler: async (request, h) => {
+      const project = getProject(request.params.id);
+      const { text } = request.payload;
+      if (!text || !text.trim()) throw Boom.badRequest('Comment text is required');
+      try {
+        const comment = await beads.addComment(project.relativePath, request.params.beadId, text.trim());
+        return h.response(comment).code(201);
+      } catch (err) {
+        return wrapBdError(err);
+      }
+    },
+  },
+
+  {
     method: 'POST',
     path: '/api/projects/{id}/init',
     handler: async (request, h) => {

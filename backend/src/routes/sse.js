@@ -29,7 +29,7 @@ module.exports = [
         }
       };
 
-      fs.watchFile(watchPath, { interval: 2000, persistent: false }, onChange);
+      fs.watchFile(watchPath, { interval: 1000, persistent: false }, onChange);
 
       // Heartbeat keeps connection alive through proxies / load balancers
       const heartbeat = setInterval(() => {

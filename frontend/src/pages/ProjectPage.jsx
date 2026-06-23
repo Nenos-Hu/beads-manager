@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -84,15 +84,26 @@ export default function ProjectPage() {
     }
   };
 
+  // Keep a ref to the latest loadBeads so effects with [id] deps
+  // don't capture a stale closure where project is still null.
+  const loadBeadsRef = useRef(loadBeads);
+  loadBeadsRef.current = loadBeads;
+
   useEffect(() => {
     loadProject().then((p) => loadBeads(p));
   }, [id]);
 
   useEffect(() => {
     const es = new EventSource(`/api/projects/${id}/events`);
-    es.addEventListener('update', () => loadBeads());
+    es.addEventListener('update', () => loadBeadsRef.current());
     es.onerror = () => {};
     return () => es.close();
+  }, [id]);
+
+  // Fallback: re-fetch every 30 s in case SSE is dropped
+  useEffect(() => {
+    const t = setInterval(() => loadBeadsRef.current(), 30000);
+    return () => clearInterval(t);
   }, [id]);
 
   const handleCreate = async (form) => {

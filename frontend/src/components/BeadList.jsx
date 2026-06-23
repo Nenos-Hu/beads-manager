@@ -16,8 +16,9 @@ import Checkbox from '@mui/material/Checkbox';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import CircularProgress from '@mui/material/CircularProgress';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import StatusChip from './StatusChip';
 import PriorityBadge from './PriorityBadge';
 import TypeChip from './TypeChip';
@@ -72,7 +73,7 @@ function InlinePrioritySelect({ beadId, value, onUpdate, updating }) {
 }
 
 export default function BeadList({
-  beads, onSelect, onUpdate,
+  beads, onEdit, onQuickComment, onUpdate,
   selectedStatuses, onStatusesChange,
   selectedPriorities, onPrioritiesChange,
 }) {
@@ -178,7 +179,7 @@ export default function BeadList({
             </TableHead>
             <TableBody>
               {filtered.map((b) => (
-                <TableRow key={b.id} hover onClick={() => onSelect(b)} sx={{ cursor: 'pointer' }}>
+                <TableRow key={b.id} hover onClick={() => onEdit(b)} sx={{ cursor: 'pointer' }}>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <Typography variant="caption" color="text.secondary" fontFamily="monospace">
@@ -215,9 +216,11 @@ export default function BeadList({
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); onSelect(b); }}>
-                      <OpenInNewIcon fontSize="small" />
-                    </IconButton>
+                    <Tooltip title="Add comment">
+                      <IconButton size="small" onClick={(e) => { e.stopPropagation(); onQuickComment(b); }}>
+                        <ChatBubbleOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}

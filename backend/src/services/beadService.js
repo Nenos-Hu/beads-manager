@@ -44,11 +44,15 @@ const createBead = async (relativePath, { title, description, priority, issueTyp
   return parseJson(out);
 };
 
-const updateBead = async (relativePath, beadId, { description, priority, status }) => {
+const updateBead = async (relativePath, beadId, { title, description, priority, status, issueType, acceptanceCriteria, notes }) => {
   const args = ['update', beadId];
+  if (title !== undefined && title !== null) args.push('--title', title);
   if (description !== undefined) args.push('--description', description);
   if (priority !== undefined && priority !== null) args.push('--priority', String(priority));
   if (status !== undefined) args.push('--status', status);
+  if (issueType !== undefined) args.push('--type', issueType);
+  if (acceptanceCriteria !== undefined) args.push('--acceptance', acceptanceCriteria);
+  if (notes !== undefined) args.push('--notes', notes);
   args.push('--json');
   const out = await bd(args, projectPath(relativePath));
   return parseJson(out);

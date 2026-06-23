@@ -22,22 +22,23 @@ import { buildTheme } from '../themes';
 import { api } from '../api/client';
 import BeadList, { DEFAULT_STATUSES } from '../components/BeadList';
 import BeadForm from '../components/BeadForm';
-import BeadDetail from '../components/BeadDetail';
 import BeadDashboard from '../components/BeadDashboard';
+import QuickCommentDialog from '../components/QuickCommentDialog';
 import ColorSchemePicker from '../components/ColorSchemePicker';
 
 export default function ProjectPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [project, setProject] = useState(null);
-  const [beads, setBeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [notInit, setNotInit] = useState(false);
+  const [project, setProject]   = useState(null);
+  const [beads, setBeads]       = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+  const [notInit, setNotInit]   = useState(false);
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [selectedBead, setSelectedBead] = useState(null);
+  const [createOpen, setCreateOpen]   = useState(false);
+  const [editBead, setEditBead]       = useState(null);   // bead being edited
+  const [commentBead, setCommentBead] = useState(null);   // bead for quick comment
 
   const [selectedStatuses, setSelectedStatuses]     = useState(DEFAULT_STATUSES);
   const [selectedPriorities, setSelectedPriorities] = useState([]);
@@ -99,14 +100,16 @@ export default function ProjectPage() {
     await loadBeads();
   };
 
-  const handleEdit = async (beadId, form) => {
-    await api.updateBead(id, beadId, form);
-    await loadBeads();
-    setSelectedBead(null);
-  };
-
-  const handleClose = async (beadId, reason) => {
-    await api.closeBead(id, beadId, reason);
+  const handleEditSubmit = async (form) => {
+    await api.updateBead(id, editBead.id, {
+      title:               form.title,
+      description:         form.description,
+      priority:            form.priority,
+      status:              form.status,
+      issueType:           form.issueType,
+      acceptanceCriteria:  form.acceptanceCriteria,
+      notes:               form.notes,
+    });
     await loadBeads();
   };
 
@@ -187,9 +190,7 @@ export default function ProjectPage() {
           </Box>
         )}
 
-        {!loading && error && (
-          <Alert severity="error">{error}</Alert>
-        )}
+        {!loading && error && <Alert severity="error">{error}</Alert>}
 
         {!loading && notInit && (
           <Alert
@@ -215,7 +216,8 @@ export default function ProjectPage() {
             />
             <BeadList
               beads={beads}
-              onSelect={(b) => setSelectedBead(b)}
+              onEdit={setEditBead}
+              onQuickComment={setCommentBead}
               onUpdate={handleInlineUpdate}
               selectedStatuses={selectedStatuses}
               onStatusesChange={setSelectedStatuses}
@@ -242,13 +244,21 @@ export default function ProjectPage() {
           <BeadForm open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreate} />
         )}
 
-        <BeadDetail
-          bead={selectedBead}
-          open={Boolean(selectedBead)}
-          onClose={() => setSelectedBead(null)}
-          onEdit={handleEdit}
-          onDelete={handleClose}
+        {editBead && (
+          <BeadForm
+            open={Boolean(editBead)}
+            onClose={() => setEditBead(null)}
+            onSubmit={handleEditSubmit}
+            initial={editBead}
+            projectId={id}
+          />
+        )}
+
+        <QuickCommentDialog
+          open={Boolean(commentBead)}
+          bead={commentBead}
           projectId={id}
+          onClose={() => setCommentBead(null)}
         />
       </Container>
     </ThemeProvider>

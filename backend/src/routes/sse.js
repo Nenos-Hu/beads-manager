@@ -23,9 +23,13 @@ module.exports = [
       stream.write(': connected\n\n');
 
       // fs.watchFile uses stat-polling so it works reliably across Docker volume mounts
+      let debounceTimer = null;
       const onChange = (curr, prev) => {
         if (curr.mtimeMs !== prev.mtimeMs && !stream.destroyed) {
-          stream.write('event: update\ndata: {}\n\n');
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            if (!stream.destroyed) stream.write('event: update\ndata: {}\n\n');
+          }, 300);
         }
       };
 
@@ -37,6 +41,7 @@ module.exports = [
       }, 30000);
 
       request.raw.req.on('close', () => {
+        clearTimeout(debounceTimer);
         clearInterval(heartbeat);
         fs.unwatchFile(watchPath, onChange);
         if (!stream.destroyed) stream.destroy();

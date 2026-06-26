@@ -65,22 +65,29 @@ export default function ProjectPage() {
     return p;
   };
 
-  const loadBeads = async (p = project) => {
-    if (!p) return;
-    setLoading(true);
-    setError('');
-    setNotInit(false);
+  const loadBeads = async (p, silent = false) => {
+    const target = p ?? project;
+    if (!target) return;
+    if (!silent) setLoading(true);
+    if (!silent) setError('');
+    if (!silent) setNotInit(false);
     try {
-      const data = await api.getBeads(p.id);
-      setBeads(Array.isArray(data) ? data : []);
+      const data = await api.getBeads(target.id);
+      const newBeads = Array.isArray(data) ? data : [];
+      setBeads((prev) => {
+        if (JSON.stringify(prev) === JSON.stringify(newBeads)) return prev;
+        return newBeads;
+      });
     } catch (err) {
-      if (err.message.includes('not initialized') || err.message.includes('.beads')) {
-        setNotInit(true);
-      } else {
-        setError(err.message);
+      if (!silent) {
+        if (err.message.includes('not initialized') || err.message.includes('.beads')) {
+          setNotInit(true);
+        } else {
+          setError(err.message);
+        }
       }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -95,14 +102,14 @@ export default function ProjectPage() {
 
   useEffect(() => {
     const es = new EventSource(`/api/projects/${id}/events`);
-    es.addEventListener('update', () => loadBeadsRef.current());
+    es.addEventListener('update', () => loadBeadsRef.current(undefined, true));
     es.onerror = () => {};
     return () => es.close();
   }, [id]);
 
-  // Fallback: re-fetch every 30 s in case SSE is dropped
+  // Fallback: re-fetch every 30 s in case SSE is dropped (silent — no spinner)
   useEffect(() => {
-    const t = setInterval(() => loadBeadsRef.current(), 30000);
+    const t = setInterval(() => loadBeadsRef.current(undefined, true), 30000);
     return () => clearInterval(t);
   }, [id]);
 

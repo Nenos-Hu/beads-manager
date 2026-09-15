@@ -64,14 +64,20 @@ function StatRow({ stats }) {
   );
 }
 
-export default function ProjectCard({ project, onDelete }) {
+export default function ProjectCard({ project, onDelete, refreshKey = 0 }) {
   const navigate = useNavigate();
   const scheme = COLOR_SCHEMES[project.colorScheme] ?? COLOR_SCHEMES[0];
   const [stats, setStats] = useState(null);
 
+  // Stats are fetched on mount and when the parent bumps refreshKey (Refresh button) — never on a timer.
   useEffect(() => {
-    api.getProjectStats(project.id).then(setStats).catch(() => setStats({ byStatus: {}, total: 0 }));
-  }, [project.id]);
+    let cancelled = false;
+    setStats(null);
+    api.getProjectStats(project.id)
+      .then((s) => { if (!cancelled) setStats(s); })
+      .catch(() => { if (!cancelled) setStats({ byStatus: {}, total: 0 }); });
+    return () => { cancelled = true; };
+  }, [project.id, refreshKey]);
 
   return (
     <Card

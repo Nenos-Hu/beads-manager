@@ -7,12 +7,42 @@ const util = require('util');
 const execFileAsync = util.promisify(execFile);
 const WORKSPACE = process.env.WORKSPACE_PATH || '/workspace';
 
+// Each `bd` invocation is a ~145 MB Go binary with an embedded Dolt database:
+// measured at ~0.8 s and ~110 MB peak RSS per call. Cap how many run at once so
+// a burst of requests (e.g. the home page loading stats for every project)
+// cannot multiply that memory footprint.
+const MAX_CONCURRENT_BD = parseInt(process.env.BD_MAX_CONCURRENT || '2', 10);
+const EXEC_TIMEOUT_MS = 30000;
+const MAX_BUFFER = 32 * 1024 * 1024; // `bd list --limit 0` on a large project can exceed Node's 1 MB default
+
+let running = 0;
+const queue = [];
+
+const acquire = () => new Promise((resolve) => {
+  if (running < MAX_CONCURRENT_BD) { running++; resolve(); return; }
+  queue.push(resolve);
+});
+
+const release = () => {
+  const next = queue.shift();
+  if (next) next(); else running--;
+};
+
 const projectPath = (relativePath) => path.join(WORKSPACE, relativePath);
 
 const bd = async (args, cwd) => {
-  const { stdout, stderr } = await execFileAsync('bd', args, { cwd, timeout: 30000 });
-  if (stderr) console.warn('[bd stderr]', stderr.trim());
-  return stdout.trim();
+  await acquire();
+  try {
+    const { stdout, stderr } = await execFileAsync('bd', args, {
+      cwd,
+      timeout: EXEC_TIMEOUT_MS,
+      maxBuffer: MAX_BUFFER,
+    });
+    if (stderr) console.warn('[bd stderr]', stderr.trim());
+    return stdout.trim();
+  } finally {
+    release();
+  }
 };
 
 const parseJson = (raw) => {
@@ -55,7 +85,9 @@ const updateBead = async (relativePath, beadId, { title, description, priority, 
   if (notes !== undefined) args.push('--notes', notes);
   args.push('--json');
   const out = await bd(args, projectPath(relativePath));
-  return parseJson(out);
+  const parsed = parseJson(out);
+  // `bd update --json` returns a one-element array holding the updated issue
+  return Array.isArray(parsed) ? parsed[0] : parsed;
 };
 
 const closeBead = async (relativePath, beadId, reason = 'Closed via Beads Manager') => {

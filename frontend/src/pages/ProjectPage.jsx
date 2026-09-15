@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -26,15 +26,22 @@ import BeadDashboard from '../components/BeadDashboard';
 import QuickCommentDialog from '../components/QuickCommentDialog';
 import ColorSchemePicker from '../components/ColorSchemePicker';
 
+// Data is loaded once on mount and then only re-fetched on explicit user
+// action: the Refresh button, or after a create / edit / inline update.
+// There is intentionally no polling, SSE, or timer-driven refresh. Every
+// fetch spawns a `bd` process on the backend (~0.8 s, ~110 MB), so
+// background refreshes were the single biggest resource cost of this app.
 export default function ProjectPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [project, setProject]   = useState(null);
-  const [beads, setBeads]       = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
-  const [notInit, setNotInit]   = useState(false);
+  const [project, setProject]       = useState(null);
+  const [beads, setBeads]           = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastLoaded, setLastLoaded] = useState(null);
+  const [error, setError]           = useState('');
+  const [notInit, setNotInit]       = useState(false);
 
   const [createOpen, setCreateOpen]   = useState(false);
   const [editBead, setEditBead]       = useState(null);   // bead being edited
@@ -65,57 +72,38 @@ export default function ProjectPage() {
     return p;
   };
 
+  // `silent` keeps the current list on screen (button spinner only) instead of
+  // swapping the whole page for a progress indicator.
   const loadBeads = async (p, silent = false) => {
     const target = p ?? project;
     if (!target) return;
-    if (!silent) setLoading(true);
-    if (!silent) setError('');
-    if (!silent) setNotInit(false);
+    if (silent) setRefreshing(true); else setLoading(true);
+    setError('');
+    setNotInit(false);
     try {
       const data = await api.getBeads(target.id);
-      const newBeads = Array.isArray(data) ? data : [];
-      setBeads((prev) => {
-        if (JSON.stringify(prev) === JSON.stringify(newBeads)) return prev;
-        return newBeads;
-      });
+      setBeads(Array.isArray(data) ? data : []);
+      setLastLoaded(new Date());
     } catch (err) {
-      if (!silent) {
-        if (err.message.includes('not initialized') || err.message.includes('.beads')) {
-          setNotInit(true);
-        } else {
-          setError(err.message);
-        }
+      if (err.message.includes('not initialized') || err.message.includes('.beads')) {
+        setNotInit(true);
+      } else {
+        setError(err.message);
       }
     } finally {
-      if (!silent) setLoading(false);
+      if (silent) setRefreshing(false); else setLoading(false);
     }
   };
-
-  // Keep a ref to the latest loadBeads so effects with [id] deps
-  // don't capture a stale closure where project is still null.
-  const loadBeadsRef = useRef(loadBeads);
-  loadBeadsRef.current = loadBeads;
 
   useEffect(() => {
     loadProject().then((p) => loadBeads(p));
   }, [id]);
 
-  useEffect(() => {
-    const es = new EventSource(`/api/projects/${id}/events`);
-    es.addEventListener('update', () => loadBeadsRef.current(undefined, true));
-    es.onerror = () => {};
-    return () => es.close();
-  }, [id]);
-
-  // Fallback: re-fetch every 30 s in case SSE is dropped (silent — no spinner)
-  useEffect(() => {
-    const t = setInterval(() => loadBeadsRef.current(undefined, true), 30000);
-    return () => clearInterval(t);
-  }, [id]);
+  const handleRefresh = () => loadBeads(undefined, true);
 
   const handleCreate = async (form) => {
     await api.createBead(id, form);
-    await loadBeads();
+    await loadBeads(undefined, true);
   };
 
   const handleEditSubmit = async (form) => {
@@ -128,15 +116,23 @@ export default function ProjectPage() {
       acceptanceCriteria:  form.acceptanceCriteria,
       notes:               form.notes,
     });
-    await loadBeads();
+    await loadBeads(undefined, true);
   };
 
+  // Optimistic update, then replace the row with the bead the backend returns
+  // (one `bd update` instead of `bd update` + `bd list`). Falls back to a full
+  // reload only if the response is not a bead or the update failed.
   const handleInlineUpdate = async (beadId, changes) => {
     setBeads((prev) => prev.map((b) => b.id === beadId ? { ...b, ...changes } : b));
     try {
-      await api.updateBead(id, beadId, changes);
+      const updated = await api.updateBead(id, beadId, changes);
+      if (updated && updated.id === beadId) {
+        setBeads((prev) => prev.map((b) => b.id === beadId ? updated : b));
+      } else {
+        await loadBeads(undefined, true);
+      }
     } catch {
-      await loadBeads();
+      await loadBeads(undefined, true);
     }
   };
 
@@ -158,9 +154,15 @@ export default function ProjectPage() {
     setPaletteAnchor(null);
   };
 
-  if (!project) return null;
+  // buildTheme() creates a fresh MUI theme object; without memoization every
+  // state change (typing in the search box, toggling a filter) would rebuild it
+  // and force Emotion to regenerate the whole stylesheet.
+  const theme = useMemo(
+    () => buildTheme(project?.colorScheme),
+    [project?.colorScheme],
+  );
 
-  const theme = buildTheme(project.colorScheme);
+  if (!project) return null;
 
   return (
     <ThemeProvider theme={theme}>
@@ -183,17 +185,25 @@ export default function ProjectPage() {
               {project.relativePath}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {lastLoaded && (
+              <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5 }}>
+                Loaded {lastLoaded.toLocaleTimeString()}
+              </Typography>
+            )}
             <Tooltip title="Change color scheme">
               <IconButton onClick={(e) => setPaletteAnchor(e.currentTarget)} color="primary">
                 <PaletteIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Refresh">
-              <IconButton onClick={() => loadBeads()} disabled={loading}>
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
+            <Button
+              variant="outlined"
+              startIcon={refreshing ? <CircularProgress size={16} color="inherit" /> : <RefreshIcon />}
+              onClick={handleRefresh}
+              disabled={loading || refreshing}
+            >
+              Refresh
+            </Button>
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)} disabled={notInit}>
               New Bead
             </Button>

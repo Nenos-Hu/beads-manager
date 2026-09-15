@@ -21,6 +21,7 @@ import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import ProjectCard from '../components/ProjectCard';
 import ColorSchemePicker from '../components/ColorSchemePicker';
@@ -30,6 +31,9 @@ import { api } from '../api/client';
 // Steps: 'browse' → 'discovered'
 export default function HomePage() {
   const [projects, setProjects] = useState([]);
+  // Bumped by the Refresh button; ProjectCard re-fetches its stats when it changes.
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Browse step
@@ -51,6 +55,16 @@ export default function HomePage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await load();
+      setRefreshKey((k) => k + 1);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const openDialog = () => {
     setStep('browse');
@@ -136,9 +150,19 @@ export default function HomePage() {
           <Typography variant="h4" fontWeight={700}>Beads Manager</Typography>
           <Typography color="text.secondary">Manage your project beads</Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openDialog}>
-          Add Project
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={refreshing ? <CircularProgress size={16} color="inherit" /> : <RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            Refresh
+          </Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openDialog}>
+            Add Project
+          </Button>
+        </Box>
       </Box>
 
       {projects.length === 0 ? (
@@ -150,7 +174,7 @@ export default function HomePage() {
         <Grid container spacing={3}>
           {projects.map((p) => (
             <Grid item key={p.id} xs={12} sm={6} md={4}>
-              <ProjectCard project={p} onDelete={handleDelete} />
+              <ProjectCard project={p} onDelete={handleDelete} refreshKey={refreshKey} />
             </Grid>
           ))}
         </Grid>

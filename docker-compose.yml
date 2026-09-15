@@ -6,11 +6,16 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ${WORKSPACE_PATH}:/workspace
+      - ${DRIVE_C:-C:\}:/mnt/c
+      - ${DRIVE_D:-D:\}:/mnt/d
+      - ${DRIVE_E:-E:\}:/mnt/e
+      - ${DRIVE_F:-F:\}:/mnt/f
+      - ${DRIVE_G:-G:\}:/mnt/g
+      - ${DRIVE_N:-N:\}:/mnt/n
       - beads-data:/data
     environment:
       NODE_ENV: production
-      WORKSPACE_PATH: /workspace
+      WORKSPACE_PATH: /mnt
       DATA_PATH: /data
       PORT: 3001
     restart: unless-stopped

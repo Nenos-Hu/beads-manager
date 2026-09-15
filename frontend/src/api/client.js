@@ -42,4 +42,31 @@ export const api = {
 
   // Init
   initProject: (projectId) => request('POST', `/projects/${projectId}/init`),
+
+  // Export: downloads every bead of the project (all fields) as JSON or CSV.
+  // Fetched as a blob rather than navigating to the URL so that a backend
+  // error surfaces as a thrown Error instead of a page full of JSON.
+  exportBeads: async (projectId, format = 'json') => {
+    const res = await fetch(`${BASE}/projects/${projectId}/export?format=${encodeURIComponent(format)}`);
+    if (!res.ok) {
+      let message = 'Export failed';
+      try {
+        const data = await res.json();
+        message = data.message || data.error || message;
+      } catch { /* non-JSON error body */ }
+      throw new Error(message);
+    }
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="([^"]+)"/);
+    const filename = match ? match[1] : `beads.${format}`;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 };

@@ -132,6 +132,34 @@ module.exports = [
     },
   },
 
+  // Full export of every bead (all fields, incl. labels, dependencies and
+  // comments) as a downloadable JSON or CSV file.
+  {
+    method: 'GET',
+    path: '/api/projects/{id}/export',
+    handler: async (request, h) => {
+      const project = getProject(request.params.id);
+      const format = String(request.query.format || 'json').toLowerCase();
+      if (format !== 'json' && format !== 'csv') {
+        throw Boom.badRequest('format must be "json" or "csv"');
+      }
+      let records;
+      try {
+        records = await beads.exportBeads(project.relativePath);
+      } catch (err) {
+        return wrapBdError(err);
+      }
+      const stamp = new Date().toISOString().slice(0, 10);
+      const slug = String(project.name || project.id).replace(/[^\w.-]+/g, '_');
+      const filename = `${slug}-beads-${stamp}.${format}`;
+      const body = format === 'csv' ? beads.beadsToCsv(records) : JSON.stringify(records, null, 2);
+      return h.response(body)
+        .type(format === 'csv' ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${filename}"`)
+        .header('Cache-Control', 'no-store');
+    },
+  },
+
   {
     method: 'POST',
     path: '/api/projects/{id}/init',

@@ -14,10 +14,18 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
 import Popover from '@mui/material/Popover';
 import Tooltip from '@mui/material/Tooltip';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Snackbar from '@mui/material/Snackbar';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PaletteIcon from '@mui/icons-material/Palette';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import DownloadIcon from '@mui/icons-material/Download';
+import DataObjectIcon from '@mui/icons-material/DataObject';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import { buildTheme } from '../themes';
 import { api } from '../api/client';
 import BeadList, { DEFAULT_STATUSES } from '../components/BeadList';
@@ -51,6 +59,23 @@ export default function ProjectPage() {
   const [selectedPriorities, setSelectedPriorities] = useState([]);
 
   const [paletteAnchor, setPaletteAnchor] = useState(null);
+
+  const [exportAnchor, setExportAnchor] = useState(null);
+  const [exporting, setExporting]       = useState(false);
+  const [exportError, setExportError]   = useState('');
+
+  const handleExport = async (format) => {
+    setExportAnchor(null);
+    setExporting(true);
+    setExportError('');
+    try {
+      await api.exportBeads(id, format);
+    } catch (err) {
+      setExportError(err.message);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleStatusCardClick = (status) => {
     setSelectedStatuses((prev) =>
@@ -204,6 +229,14 @@ export default function ProjectPage() {
             >
               Refresh
             </Button>
+            <Button
+              variant="outlined"
+              startIcon={exporting ? <CircularProgress size={16} color="inherit" /> : <DownloadIcon />}
+              onClick={(e) => setExportAnchor(e.currentTarget)}
+              disabled={loading || notInit || exporting}
+            >
+              Export
+            </Button>
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)} disabled={notInit}>
               New Bead
             </Button>
@@ -267,6 +300,34 @@ export default function ProjectPage() {
             <ColorSchemePicker value={project.colorScheme} onChange={handleColorChange} />
           </Box>
         </Popover>
+
+        <Menu
+          open={Boolean(exportAnchor)}
+          anchorEl={exportAnchor}
+          onClose={() => setExportAnchor(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <MenuItem onClick={() => handleExport('json')}>
+            <ListItemIcon><DataObjectIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary="Export as JSON" secondary="All beads, all fields" />
+          </MenuItem>
+          <MenuItem onClick={() => handleExport('csv')}>
+            <ListItemIcon><TableChartIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary="Export as CSV" secondary="Opens in Excel / Sheets" />
+          </MenuItem>
+        </Menu>
+
+        <Snackbar
+          open={Boolean(exportError)}
+          autoHideDuration={6000}
+          onClose={() => setExportError('')}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity="error" onClose={() => setExportError('')} variant="filled">
+            Export failed: {exportError}
+          </Alert>
+        </Snackbar>
 
         {createOpen && (
           <BeadForm open={createOpen} onClose={() => setCreateOpen(false)} onSubmit={handleCreate} />

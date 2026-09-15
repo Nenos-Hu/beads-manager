@@ -117,4 +117,53 @@ const addComment = async (relativePath, beadId, text) => {
   return parseJson(out);
 };
 
-module.exports = { listBeads, getBead, createBead, updateBead, closeBead, initBeads, getStats, listComments, addComment };
+// Canonical column order for CSV export. Any field `bd export` emits that is
+// not listed here is appended after these, so nothing is silently dropped.
+const EXPORT_COLUMNS = [
+  'id', 'title', 'status', 'priority', 'issue_type',
+  'description', 'design', 'acceptance_criteria', 'notes',
+  'assignee', 'owner', 'created_by', 'labels',
+  'created_at', 'updated_at', 'started_at', 'closed_at', 'deferred_until',
+  'close_reason', 'parent', 'dependencies', 'dependents',
+  'dependency_count', 'dependent_count', 'comment_count', 'comments',
+];
+
+// `bd export` writes JSONL: one complete issue per line, including labels,
+// dependencies and comments (fields that are empty are omitted per record).
+// Unlike `bd list --json` it carries every stored field, so it is the source
+// for a full export.
+const exportBeads = async (relativePath) => {
+  const out = await bd(['export'], projectPath(relativePath));
+  return out
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const record = JSON.parse(line);
+      delete record._type; // internal export marker, always "issue"
+      return record;
+    });
+};
+
+const csvCell = (value) => {
+  if (value === undefined || value === null) return '';
+  const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  // RFC 4180: quote when the cell holds a separator, quote or line break;
+  // embedded quotes are doubled.
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
+const beadsToCsv = (records) => {
+  const extra = new Set();
+  records.forEach((r) => Object.keys(r).forEach((k) => { if (!EXPORT_COLUMNS.includes(k)) extra.add(k); }));
+  const columns = [...EXPORT_COLUMNS, ...[...extra].sort()];
+  const lines = [columns.map(csvCell).join(',')];
+  records.forEach((r) => lines.push(columns.map((c) => csvCell(r[c])).join(',')));
+  // CRLF line endings and a UTF-8 BOM so Excel opens the file with the right encoding.
+  return '﻿' + lines.join('\r\n') + '\r\n';
+};
+
+module.exports = {
+  listBeads, getBead, createBead, updateBead, closeBead, initBeads, getStats, listComments, addComment,
+  exportBeads, beadsToCsv,
+};
